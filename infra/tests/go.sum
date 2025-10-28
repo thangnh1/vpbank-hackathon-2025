@@ -1,0 +1,2 @@
+// Go module sums should be generated with `go mod tidy`
+// Install Go locally and run `go mod tidy` from infra/tests to populate this file.
