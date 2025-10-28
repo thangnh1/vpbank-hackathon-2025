@@ -12,7 +12,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: write # comment vào PR
-      id-token: write # future-friendly nếu bạn chuyển sang OIDC assume role
+      id-token: write 
 
     steps:
       - name: Checkout repo
