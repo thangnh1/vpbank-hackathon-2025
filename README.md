@@ -1,0 +1,1 @@
+Anh em dev feature nào thì tạo branch ra nhé, anh đã build github action để CICD, tạo PR để anh review infra trc r mới merge hoặc nếu không ảnh hưởng tới infra thì cứ tự merge nhen, anh k tạo permission riêng nữa, sống bằng niềm tin!!
