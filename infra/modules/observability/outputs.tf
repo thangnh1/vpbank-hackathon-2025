@@ -10,5 +10,5 @@ output "config_recorder_name" {
 
 output "cloudfront_distribution_id" {
   description = "Identifier of the optional CloudFront distribution"
-  value       = local.waf_enabled ? aws_cloudfront_distribution.this[0].id : null
+  value       = aws_cloudfront_distribution.this[0].id 
 }
