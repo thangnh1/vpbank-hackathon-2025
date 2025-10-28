@@ -29,10 +29,6 @@ infra/
 - AWS credentials with permissions to manage the provisioned services
 - (Optional) Go >= 1.21 if you plan to execute the Terratest suite. Run `go mod tidy` in `infra/tests` to download dependencies before testing.
 
-## Backend Configuration
-
-Each environment expects the remote backend parameters (`backend_bucket`, `backend_key`, `backend_region`, `backend_dynamodb_table`) to be provided. Update `terraform.tfvars` or supply the values via CLI flags/environment variables before running `terraform init`.
-
 ## Deploying an Environment
 
 1. Change into the target environment directory, e.g. `infra/envs/dev`.
@@ -75,7 +71,3 @@ terraform destroy -var-file=terraform.tfvars
 ```
 
 The Terratest suite automatically runs `terraform destroy`, but you should also run it manually when experimenting interactively.
-
-export AWS_ACCESS_KEY_ID="AKIAV6PFTFWHKEHDEYPF"
-export AWS_SECRET_ACCESS_KEY="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"
-export AWS_DEFAULT_REGION="Global"
