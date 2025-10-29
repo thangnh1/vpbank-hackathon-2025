@@ -20,24 +20,24 @@ module "network" {
   tags = local.common_tags
 }
 
-# module "data_stores" {
-#   source      = "../../modules/data_stores"
-#   name        = var.project_name
-#   environment = var.environment
-#   vpc_id      = module.network.vpc_id
+module "data_stores" {
+  source      = "../../modules/data_stores"
+  name        = var.project_name
+  environment = var.environment
+  vpc_id      = module.network.vpc_id
 
-#   route_table_ids = flatten([
-#     module.network.route_table_ids.app,
-#     module.network.route_table_ids.data,
-#     module.network.route_table_ids.audit,
-#     module.network.route_table_ids.blockchain
-#   ])
+  route_table_ids = flatten([
+    module.network.route_table_ids.app,
+    module.network.route_table_ids.data,
+    module.network.route_table_ids.audit,
+    module.network.route_table_ids.blockchain
+  ])
 
-#   data_lake_bucket_name = var.data_lake_bucket_name
-#   ledger_table_name     = "ledger-table"
+  data_lake_bucket_name = var.data_lake_bucket_name
+  ledger_table_name     = "ledger-table"
 
-#   tags = local.common_tags
-# }
+  tags = local.common_tags
+}
 
 # module "serverless_app" {
 #   source      = "../../modules/serverless_app"
