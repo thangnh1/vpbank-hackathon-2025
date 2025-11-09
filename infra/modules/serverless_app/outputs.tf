@@ -28,10 +28,10 @@ output "processing_lambda_name" {
   value       = aws_lambda_function.processing.function_name
 }
 
-output "state_machine_arn" {
-  description = "ARN of the optional Step Functions state machine"
-  value       = try(aws_sfn_state_machine.processing[0].arn, null)
-}
+# output "state_machine_arn" {
+#   description = "ARN of the optional Step Functions state machine"
+#   value       = try(aws_sfn_state_machine.processing[0].arn, null)
+# }
 
 output "kinesis_stream_name" {
   description = "Name of the Kinesis data stream handling ingestion"

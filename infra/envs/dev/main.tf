@@ -20,42 +20,42 @@ module "network" {
   tags = local.common_tags
 }
 
-# module "data_stores" {
-#   source      = "../../modules/data_stores"
-#   name        = var.project_name
-#   environment = var.environment
-#   vpc_id      = module.network.vpc_id
+module "data_stores" {
+  source      = "../../modules/data_stores"
+  name        = var.project_name
+  environment = var.environment
+  vpc_id      = module.network.vpc_id
 
-#   route_table_ids = flatten([
-#     module.network.route_table_ids.app,
-#     module.network.route_table_ids.data,
-#     module.network.route_table_ids.audit,
-#     module.network.route_table_ids.blockchain
-#   ])
+  route_table_ids = flatten([
+    module.network.route_table_ids.app,
+    module.network.route_table_ids.data,
+    module.network.route_table_ids.audit,
+    module.network.route_table_ids.blockchain
+  ])
 
-#   data_lake_bucket_name = var.data_lake_bucket_name
-#   ledger_table_name     = "ledger-table"
+  data_lake_bucket_name = var.data_lake_bucket_name
+  ledger_table_name     = "ledger-table"
 
-#   tags = local.common_tags
-# }
+  tags = local.common_tags
+}
 
-# module "serverless_app" {
-#   source      = "../../modules/serverless_app"
-#   name        = var.project_name
-#   environment = var.environment
-#   vpc_id      = module.network.vpc_id
+module "serverless_app" {
+  source      = "../../modules/serverless_app"
+  name        = var.project_name
+  environment = var.environment
+  vpc_id      = module.network.vpc_id
 
-#   app_subnet_ids                 = module.network.app_subnet_ids
-#   data_lake_bucket_arn           = module.data_stores.data_lake_bucket_arn
-#   data_lake_bucket_name          = module.data_stores.data_lake_bucket_name
-#   ledger_table_arn               = module.data_stores.ledger_table_arn
-#   ledger_table_name              = module.data_stores.ledger_table_name
-#   queue_name                     = "ingestion-queue"
-#   enable_step_function           = var.enable_step_function
-#   processing_schedule_expression = "rate(5 minutes)"
+  app_subnet_ids                 = module.network.app_subnet_ids
+  data_lake_bucket_arn           = module.data_stores.data_lake_bucket_arn
+  data_lake_bucket_name          = module.data_stores.data_lake_bucket_name
+  ledger_table_arn               = module.data_stores.ledger_table_arn
+  ledger_table_name              = module.data_stores.ledger_table_name
+  queue_name                     = "ingestion-queue"
+  # enable_step_function           = var.enable_step_function
+  processing_schedule_expression = "rate(5 minutes)"
 
-#   tags = local.common_tags
-# }
+  tags = local.common_tags
+}
 
 # module "blockchain_ipfs" {
 #   source      = "../../modules/blockchain_ipfs"
@@ -120,10 +120,10 @@ output "network_vpc_id" {
   value       = module.network.vpc_id
 }
 
-# output "api_invoke_url" {
-#   description = "Invoke URL for the ingestion API"
-#   value       = module.serverless_app.api_invoke_url
-# }
+output "api_invoke_url" {
+  description = "Invoke URL for the ingestion API"
+  value       = module.serverless_app.api_invoke_url
+}
 
 # output "audit_bucket_name" {
 #   description = "Audit bucket used by compliance tooling"

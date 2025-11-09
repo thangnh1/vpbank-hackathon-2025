@@ -486,28 +486,28 @@ resource "aws_iam_role_policy_attachment" "state_machine" {
 }
 
 # State machine orchestrating downstream processing (optional)
-resource "aws_sfn_state_machine" "processing" {
-  count = var.enable_step_function ? 1 : 0
+# resource "aws_sfn_state_machine" "processing" {
+#   count = var.enable_step_function ? 1 : 0
 
-  name     = "${var.name}-${var.environment}-processing-sm"
-  role_arn = aws_iam_role.state_machine[0].arn
+#   name     = "${var.name}-${var.environment}-processing-sm"
+#   role_arn = aws_iam_role.state_machine[0].arn
 
-  definition = jsonencode({
-    Comment = "Orchestrate processing of queued messages"
-    StartAt = "InvokeProcessing"
-    States = {
-      InvokeProcessing = {
-        Type     = "Task"
-        Resource = "arn:aws:states:::lambda:invoke"
-        Parameters = {
-          FunctionName = aws_lambda_function.processing.arn
-        }
-        End = true
-      }
-    }
-  })
+#   definition = jsonencode({
+#     Comment = "Orchestrate processing of queued messages"
+#     StartAt = "InvokeProcessing"
+#     States = {
+#       InvokeProcessing = {
+#         Type     = "Task"
+#         Resource = "arn:aws:states:::lambda:invoke"
+#         Parameters = {
+#           FunctionName = aws_lambda_function.processing.arn
+#         }
+#         End = true
+#       }
+#     }
+#   })
 
-  tags = merge(local.base_tags, {
-    Name = "${var.name}-${var.environment}-processing-sm"
-  })
-}
+#   tags = merge(local.base_tags, {
+#     Name = "${var.name}-${var.environment}-processing-sm"
+#   })
+# }

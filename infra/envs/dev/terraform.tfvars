@@ -60,12 +60,12 @@ blockchain_subnets = [
   }
 ]
 
-data_lake_bucket_name  = "vpbank-hackathon-dev-data-lake"
-audit_bucket_name      = "vpbank-hackathon-dev-audit-logs"
+data_lake_bucket_name   = "vpbank-hackathon-dev-data-lake"
+audit_bucket_name       = "vpbank-hackathon-dev-audit-logs"
 sagemaker_endpoint_name = "vpbank-hackathon-dev-ml-endpoint"
 
-enable_step_function = true
-enable_waf           = false
+enable_step_function          = true
+enable_waf                    = false
 cloudfront_origin_domain_name = ""
 
 blockchain_instance_type  = "t3.medium"
