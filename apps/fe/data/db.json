@@ -1,0 +1,133 @@
+{
+  "users": [
+    {
+      "userId": "u_donor",
+      "email": "donor@demo.dev",
+      "role": "DONOR",
+      "name": "Nhà hảo tâm Demo"
+    },
+    {
+      "userId": "u_org",
+      "email": "org@demo.dev",
+      "role": "ORG_ADMIN",
+      "name": "Tổ chức Demo"
+    },
+    {
+      "userId": "u_auditor",
+      "email": "auditor@demo.dev",
+      "role": "AUDITOR",
+      "name": "Kiểm toán Demo"
+    },
+    {
+      "userId": "u_admin",
+      "email": "admin@demo.dev",
+      "role": "SUPERADMIN",
+      "name": "Quản trị Demo"
+    }
+  ],
+  "campaigns": [
+    {
+      "id": "c_mien-trung-lu-lut",
+      "title": "Cứu trợ khẩn cấp miền Trung mùa lũ",
+      "slug": "cuu-tro-mien-trung",
+      "summary": "Hỗ trợ nhu yếu phẩm, máy lọc nước và di dời an toàn cho các hộ dân bị ảnh hưởng do mưa lũ tại miền Trung.",
+      "goal": 500000000,
+      "raised": 120000000,
+      "status": "ACTIVE",
+      "ownerId": "u_org",
+      "tags": [
+        "cứu trợ",
+        "thiên tai",
+        "khẩn cấp"
+      ],
+      "createdAt": "2025-11-09T10:21:47.728Z",
+      "updatedAt": "2025-11-09T10:21:47.728Z"
+    },
+    {
+      "id": "c-sua-truong-vung-cao",
+      "title": "Sửa lớp học tạm vùng cao",
+      "slug": "sua-lop-hoc-vung-cao",
+      "summary": "Tu sửa phòng học, bổ sung bàn ghế và vật dụng mùa đông cho học sinh tại điểm trường vùng cao.",
+      "goal": 300000000,
+      "raised": 140200000,
+      "status": "ACTIVE",
+      "ownerId": "u_org",
+      "tags": [
+        "giáo dục",
+        "trẻ em",
+        "cơ sở vật chất"
+      ],
+      "createdAt": "2025-11-09T10:21:47.728Z",
+      "updatedAt": "2025-11-09T10:47:44.990Z"
+    }
+  ],
+  "campaignRequests": [],
+  "notifications": [],
+  "follows": [],
+  "activities": [
+    {
+      "id": "b9f76592-674a-43bb-a293-4f4c7e924004",
+      "type": "FOLLOWED",
+      "actorId": "donor@demo.dev",
+      "targetType": "CAMPAIGN",
+      "targetId": "c-sua-truong-vung-cao",
+      "createdAt": "2025-11-09T10:22:41.628Z"
+    },
+    {
+      "id": "2fcca6b6-f0c9-4d4b-96f8-d5aa90b0627f",
+      "type": "UNFOLLOWED",
+      "actorId": "donor@demo.dev",
+      "targetType": "CAMPAIGN",
+      "targetId": "c-sua-truong-vung-cao",
+      "createdAt": "2025-11-09T10:28:19.624Z"
+    },
+    {
+      "id": "004d2561-17f2-4110-a788-57e612707a4f",
+      "type": "DONATION_CREATED",
+      "actorId": "donor@demo.dev",
+      "targetType": "CAMPAIGN",
+      "targetId": "c-sua-truong-vung-cao",
+      "meta": {
+        "amount": 200000,
+        "txId": "TXN-IDDWVK91"
+      },
+      "createdAt": "2025-11-09T10:46:52.108Z"
+    },
+    {
+      "id": "1073bd89-601b-43c7-b05e-4b4279d31e9a",
+      "type": "DONATION_CREATED",
+      "actorId": "donor@demo.dev",
+      "targetType": "CAMPAIGN",
+      "targetId": "c-sua-truong-vung-cao",
+      "meta": {
+        "amount": 100000000,
+        "txId": "TXN-JMIK6Z3Y"
+      },
+      "createdAt": "2025-11-09T10:47:44.990Z"
+    }
+  ],
+  "donations": [
+    {
+      "id": "675e313b-3e2e-4d91-b00b-bd337742d143",
+      "campaignId": "c-sua-truong-vung-cao",
+      "userId": "donor@demo.dev",
+      "amount": 200000,
+      "status": "ESCROWED",
+      "txId": "TXN-IDDWVK91",
+      "paymentMethod": "MOCK_QR",
+      "message": "hello world",
+      "createdAt": "2025-11-09T10:46:52.108Z"
+    },
+    {
+      "id": "dd29978a-ecfe-4260-be4d-fe9dab71c3d2",
+      "campaignId": "c-sua-truong-vung-cao",
+      "userId": "donor@demo.dev",
+      "amount": 100000000,
+      "status": "ESCROWED",
+      "txId": "TXN-JMIK6Z3Y",
+      "paymentMethod": "MOCK_QR",
+      "message": "Bray ủng hộ",
+      "createdAt": "2025-11-09T10:47:44.990Z"
+    }
+  ]
+}
