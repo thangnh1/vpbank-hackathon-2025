@@ -1,0 +1,285 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String     @id @default(cuid())
+  email         String     @unique
+  password      String?    // null for SSO users
+  name          String?
+  role          UserRole   @default(DONOR)
+  vpbankId      String?    @unique // VPBank SSO identifier
+  vpbankEmail   String?    // Email from VPBank claims
+  vpbankLinked  Boolean    @default(false)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  donations           Donation[]
+  campaigns           Campaign[]
+  disbursements       Disbursement[]
+  auditFindings       AuditFinding[]
+  anomalies           Anomaly[]
+  notifications       Notification[]
+  approvals           DisbursementApproval[]
+
+  @@index([email])
+  @@index([role])
+}
+
+enum UserRole {
+  DONOR
+  ORG_ADMIN
+  AUDITOR
+  SUPERADMIN
+}
+
+model Campaign {
+  id              String      @id @default(cuid())
+  title           String
+  description     String
+  goal            Int         // Amount in VND
+  raised          Int         @default(0)
+  status          CampaignStatus @default(DRAFT)
+  createdBy       String
+  creator         User        @relation(fields: [createdBy], references: [id])
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  donations       Donation[]
+  milestones      Milestone[]
+  disbursements   Disbursement[]
+  evidence        Evidence[]
+  auditFindings   AuditFinding[]
+  anomalies       Anomaly[]
+
+  @@index([createdBy])
+  @@index([status])
+}
+
+enum CampaignStatus {
+  DRAFT
+  LIVE
+  PAUSED
+  COMPLETED
+  REJECTED
+}
+
+model Donation {
+  id              String      @id @default(cuid())
+  campaignId      String
+  campaign        Campaign    @relation(fields: [campaignId], references: [id])
+  userId          String?     // null for anonymous
+  user            User?       @relation(fields: [userId], references: [id])
+  amount          Int         // Amount in VND
+  status          DonationStatus @default(PENDING_PAYMENT)
+  txId            String      @unique
+  paymentMethod   String      @default("MOCK_QR") // MOCK_QR, MOCK_WALLET, MOCK_VPB
+  message         String?
+  onchainAt       DateTime?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([campaignId])
+  @@index([userId])
+  @@index([status])
+}
+
+enum DonationStatus {
+  PENDING_PAYMENT
+  ONCHAIN_CONFIRMED
+  ESCROWED
+  COMPLETED
+  REFUNDED
+}
+
+model Milestone {
+  id                      String      @id @default(cuid())
+  campaignId              String
+  campaign                Campaign    @relation(fields: [campaignId], references: [id])
+  title                   String
+  description             String?
+  amount                  Int         // Amount in VND
+  dueDate                 DateTime
+  status                  MilestoneStatus @default(DRAFT)
+  requiredEvidenceCount   Int         @default(1)
+  createdAt               DateTime    @default(now())
+  updatedAt               DateTime    @updatedAt
+
+  evidence        Evidence[]
+  disbursements   Disbursement[]
+
+  @@index([campaignId])
+  @@index([status])
+}
+
+enum MilestoneStatus {
+  DRAFT
+  LIVE
+  IN_REVIEW
+  VERIFIED
+  ELIGIBLE_FOR_PAYOUT
+  PAID
+  REJECTED
+}
+
+model Evidence {
+  id              String      @id @default(cuid())
+  campaignId      String
+  campaign        Campaign    @relation(fields: [campaignId], references: [id])
+  milestoneId     String?
+  milestone       Milestone?  @relation(fields: [milestoneId], references: [id])
+  type            String      // "image/jpeg", "image/png", "application/pdf", "video/mp4"
+  cid             String      @unique // Mock IPFS CID
+  size            Int         // File size in bytes
+  status          EvidenceStatus @default(QUEUED)
+  previewUrl      String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([campaignId])
+  @@index([milestoneId])
+  @@index([status])
+}
+
+enum EvidenceStatus {
+  QUEUED
+  UPLOADED
+  PINNED
+  REFERENCED
+}
+
+model Disbursement {
+  id              String      @id @default(cuid())
+  campaignId      String
+  campaign        Campaign    @relation(fields: [campaignId], references: [id])
+  milestoneId     String
+  milestone       Milestone   @relation(fields: [milestoneId], references: [id])
+  amount          Int         // Amount in VND
+  status          DisbursementStatus @default(PENDING_APPROVAL)
+  requestedBy     String
+  requestedByUser User        @relation(fields: [requestedBy], references: [id])
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  approvals       DisbursementApproval[]
+
+  @@index([campaignId])
+  @@index([milestoneId])
+  @@index([status])
+}
+
+enum DisbursementStatus {
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+  PAID
+  CANCELLED
+}
+
+model DisbursementApproval {
+  id              String      @id @default(cuid())
+  disbursementId  String
+  disbursement    Disbursement @relation(fields: [disbursementId], references: [id])
+  approvedBy      String
+  approver        User        @relation(fields: [approvedBy], references: [id])
+  status          ApprovalStatus @default(PENDING)
+  notes           String?
+  createdAt       DateTime    @default(now())
+
+  @@index([disbursementId])
+  @@index([approvedBy])
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model AuditFinding {
+  id              String      @id @default(cuid())
+  campaignId      String
+  campaign        Campaign    @relation(fields: [campaignId], references: [id])
+  auditorId       String
+  auditor         User        @relation(fields: [auditorId], references: [id])
+  severity        Severity    @default(LOW)
+  title           String
+  description     String
+  status          FindingStatus @default(OPEN)
+  createdAt       DateTime    @default(now())
+  resolvedAt      DateTime?
+
+  @@index([campaignId])
+  @@index([auditorId])
+}
+
+enum Severity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum FindingStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+model Anomaly {
+  id              String      @id @default(cuid())
+  campaignId      String
+  campaign        Campaign    @relation(fields: [campaignId], references: [id])
+  assignedTo      String?
+  assignee        User?       @relation(fields: [assignedTo], references: [id])
+  riskScore       Int         // 0-100
+  reason          String
+  status          AnomalyStatus @default(OPEN)
+  notes           String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([campaignId])
+  @@index([assignedTo])
+  @@index([status])
+}
+
+enum AnomalyStatus {
+  OPEN
+  ASSIGNED
+  INVESTIGATING
+  RESOLVED
+  FALSE_POSITIVE
+}
+
+model Notification {
+  id              String      @id @default(cuid())
+  userId          String
+  user            User        @relation(fields: [userId], references: [id])
+  type            NotificationType
+  title           String
+  message         String
+  payload         String?     // JSON
+  readAt          DateTime?
+  createdAt       DateTime    @default(now())
+
+  @@index([userId])
+  @@index([readAt])
+}
+
+enum NotificationType {
+  DONATION_CONFIRMED
+  EVIDENCE_PINNED
+  MILESTONE_VERIFIED
+  DISBURSEMENT_PAID
+  CAMPAIGN_CREATED
+  CAMPAIGN_APPROVED
+  CAMPAIGN_REJECTED
+  APPROVAL_REQUESTED
+}

@@ -1,0 +1,7 @@
+{
+  "/campaigns/page": "app/campaigns/page.js",
+  "/auth/login/page": "app/auth/login/page.js",
+  "/dashboard/campaigns/page": "app/dashboard/campaigns/page.js",
+  "/dashboard/notifications/page": "app/dashboard/notifications/page.js",
+  "/dashboard/settings/page": "app/dashboard/settings/page.js"
+}
