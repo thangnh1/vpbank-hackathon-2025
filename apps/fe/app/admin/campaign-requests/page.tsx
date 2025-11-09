@@ -5,7 +5,6 @@ import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { AceternitySidebar } from "@/components/aceternity-sidebar"
 
 type Status = "PENDING" | "APPROVED" | "REJECTED"
 
@@ -19,15 +18,6 @@ type CampaignRequest = {
   createdAt: string
   updatedAt: string
 }
-
-const adminItems = [
-  { name: "Tổng quan", href: "/admin" },
-  { name: "Chiến dịch", href: "/admin/campaigns" },
-  { name: "Yêu cầu chiến dịch", href: "/admin/campaign-requests" },
-  { name: "Giải ngân", href: "/admin/disbursements" },
-  { name: "Nhân sự & Quyền", href: "/admin/team" },
-  { name: "Cài đặt", href: "/admin/settings" },
-]
 
 export default function CampaignRequestsPage() {
   const [requests, setRequests] = useState<CampaignRequest[]>([])
@@ -102,92 +92,80 @@ export default function CampaignRequestsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-      <AceternitySidebar items={adminItems} title="Laladulara" subtitle="Admin Dashboard" />
+    <div className="max-w-6xl">
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+        <h1 className="text-3xl md:text-4xl font-bold text-white">Yêu cầu tạo chiến dịch</h1>
+        <p className="text-gray-400 mt-2">
+          Xem xét và duyệt/từ chối yêu cầu. Khi cập nhật, người gửi yêu cầu sẽ nhận thông báo ngay.
+        </p>
+      </motion.div>
 
-      <main className="ml-72 p-8">
-        <div className="max-w-6xl">
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-            <h1 className="text-3xl md:text-4xl font-bold text-white">Yêu cầu tạo chiến dịch</h1>
-            <p className="text-gray-400 mt-2">
-              Xem xét và duyệt/từ chối yêu cầu. Khi cập nhật, người gửi yêu cầu sẽ nhận thông báo ngay.
-            </p>
-          </motion.div>
+      {/* Summary cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <SummaryCard label="Đang chờ" value={pending.length} className="from-yellow-500/15 to-orange-500/10" />
+        <SummaryCard label="Đã duyệt" value={approved.length} className="from-emerald-500/15 to-teal-500/10" />
+        <SummaryCard label="Đã từ chối" value={rejected.length} className="from-rose-500/15 to-pink-500/10" />
+      </div>
 
-          {/* Summary cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <SummaryCard label="Đang chờ" value={pending.length} className="from-yellow-500/15 to-orange-500/10" />
-            <SummaryCard label="Đã duyệt" value={approved.length} className="from-emerald-500/15 to-teal-500/10" />
-            <SummaryCard label="Đã từ chối" value={rejected.length} className="from-rose-500/15 to-pink-500/10" />
-          </div>
+      {error && (
+        <div className="mb-6 rounded-lg border border-red-500/30 bg-red-500/10 text-red-200 px-4 py-3 text-sm">{error}</div>
+      )}
 
-          {error && (
-            <div className="mb-6 rounded-lg border border-red-500/30 bg-red-500/10 text-red-200 px-4 py-3 text-sm">
-              {error}
-            </div>
-          )}
-
-          {loading ? (
-            <div className="text-slate-300">Đang tải dữ liệu…</div>
-          ) : requests.length === 0 ? (
-            <div className="rounded-xl border border-white/10 bg-white/5 p-6 text-slate-300">
-              Chưa có yêu cầu nào.
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {requests.map((r) => (
-                <div
-                  key={r.id}
-                  className="rounded-xl border border-white/10 bg-gradient-to-br from-white/5 to-white/[0.03] p-5"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <div className="flex items-center gap-3">
-                        <h3 className="text-white font-semibold text-lg">{r.title}</h3>
-                        <StatusPill status={r.status} />
-                      </div>
-                      <p className="text-slate-300 mt-1">{r.details}</p>
-                      <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-slate-400">
-                        <span>Người yêu cầu: <span className="text-slate-200">{r.requestedBy}</span></span>
+      {loading ? (
+        <div className="text-slate-300">Đang tải dữ liệu…</div>
+      ) : requests.length === 0 ? (
+        <div className="rounded-xl border border-white/10 bg-white/5 p-6 text-slate-300">Chưa có yêu cầu nào.</div>
+      ) : (
+        <div className="space-y-4">
+          {requests.map((r) => (
+            <div key={r.id} className="rounded-xl border border-white/10 bg-gradient-to-br from-white/5 to-white/[0.03] p-5">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-3">
+                    <h3 className="text-white font-semibold text-lg">{r.title}</h3>
+                    <StatusPill status={r.status} />
+                  </div>
+                  <p className="text-slate-300 mt-1">{r.details}</p>
+                  <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-slate-400">
+                    <span>
+                      Người yêu cầu: <span className="text-slate-200">{r.requestedBy}</span>
+                    </span>
+                    <span className="opacity-50">•</span>
+                    <span>Gửi lúc: {new Date(r.createdAt).toLocaleString("vi-VN")}</span>
+                    {r.reason ? (
+                      <>
                         <span className="opacity-50">•</span>
-                        <span>Gửi lúc: {new Date(r.createdAt).toLocaleString("vi-VN")}</span>
-                        {r.reason ? (
-                          <>
-                            <span className="opacity-50">•</span>
-                            <span>Ghi chú: <span className="text-slate-200">{r.reason}</span></span>
-                          </>
-                        ) : null}
-                      </div>
-                    </div>
-
-                    {/* Actions */}
-                    {r.status === "PENDING" ? (
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          className="border-white/20 text-white hover:bg-white/10"
-                          onClick={() => openDialog(r.id, "REJECT")}
-                        >
-                          Từ chối
-                        </Button>
-                        <Button onClick={() => openDialog(r.id, "APPROVE")}>Duyệt</Button>
-                      </div>
+                        <span>
+                          Ghi chú: <span className="text-slate-200">{r.reason}</span>
+                        </span>
+                      </>
                     ) : null}
                   </div>
                 </div>
-              ))}
+
+                {r.status === "PENDING" ? (
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      className="border-white/20 text-white hover:bg-white/10"
+                      onClick={() => openDialog(r.id, "REJECT")}
+                    >
+                      Từ chối
+                    </Button>
+                    <Button onClick={() => openDialog(r.id, "APPROVE")}>Duyệt</Button>
+                  </div>
+                ) : null}
+              </div>
             </div>
-          )}
+          ))}
         </div>
-      </main>
+      )}
 
       {/* Dialog lý do */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>
-              {action === "APPROVE" ? "Duyệt yêu cầu chiến dịch" : "Từ chối yêu cầu chiến dịch"}
-            </DialogTitle>
+            <DialogTitle>{action === "APPROVE" ? "Duyệt yêu cầu chiến dịch" : "Từ chối yêu cầu chiến dịch"}</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-2">

@@ -1,10 +1,7 @@
 {
-  "/api/donations/route": "app/api/donations/route.js",
-  "/api/campaigns/[id]/route": "app/api/campaigns/[id]/route.js",
-  "/api/follows/route": "app/api/follows/route.js",
   "/campaigns/page": "app/campaigns/page.js",
-  "/campaigns/[id]/page": "app/campaigns/[id]/page.js",
-  "/donate/page": "app/donate/page.js",
+  "/auth/login/page": "app/auth/login/page.js",
+  "/dashboard/campaigns/page": "app/dashboard/campaigns/page.js",
   "/dashboard/notifications/page": "app/dashboard/notifications/page.js",
-  "/following-campaign-details/page": "app/following-campaign-details/page.js"
+  "/dashboard/settings/page": "app/dashboard/settings/page.js"
 }

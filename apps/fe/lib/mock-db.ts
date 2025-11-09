@@ -127,7 +127,7 @@ async function ensureDb() {
           summary:
             "Hỗ trợ nhu yếu phẩm, máy lọc nước và di dời an toàn cho các hộ dân bị ảnh hưởng do mưa lũ tại miền Trung.",
           goal: 500_000_000,
-          raised: 120_000_000,
+          raised: 0,
           status: "ACTIVE",
           ownerId: "u_org",
           tags: ["cứu trợ", "thiên tai", "khẩn cấp"],
@@ -141,7 +141,7 @@ async function ensureDb() {
           summary:
             "Tu sửa phòng học, bổ sung bàn ghế và vật dụng mùa đông cho học sinh tại điểm trường vùng cao.",
           goal: 300_000_000,
-          raised: 40_000_000,
+          raised: 0,
           status: "ACTIVE",
           ownerId: "u_org",
           tags: ["giáo dục", "trẻ em", "cơ sở vật chất"],

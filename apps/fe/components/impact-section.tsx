@@ -1,107 +1,100 @@
 "use client"
 
+import { useEffect, useMemo, useState } from "react"
 import { motion } from "framer-motion"
 import { useInView } from "react-intersection-observer"
 import { Marquee3D } from "@/components/marquee-3d"
 
-const stats = [
-  { label: "Total Donations", value: "$2.4M", suffix: "verified" },
-  { label: "Audited Releases", value: "847", suffix: "campaigns" },
-  { label: "Avg. Time to Disburse", value: "2.3", suffix: "days" },
-]
-
-const testimonials = [
-  {
-    name: "Sarah Chen",
-    org: "Global Foundation",
-    text: "Laladulara transformed how we manage our charitable giving. Complete transparency from day one.",
-  },
-  {
-    name: "Marcus Johnson",
-    org: "Impact Ventures",
-    text: "The accountability measures are unprecedented. Our donors feel truly empowered.",
-  },
-  {
-    name: "Elena Rodriguez",
-    org: "Community Leaders Network",
-    text: "Finally, a platform that treats us as partners, not just recipients. Trust rebuilt.",
-  },
-]
+type Donation = { amount: number }
+type Campaign = { status: "DRAFT" | "ACTIVE" | "PAUSED" | "COMPLETED" }
 
 export function ImpactSection() {
-  const { ref, inView } = useInView({ threshold: 0.1, triggerOnce: true })
+  const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.2 })
+  const [totalVnd, setTotalVnd] = useState(0)
+  const [countDonations, setCountDonations] = useState(0)
+  const [activeCampaigns, setActiveCampaigns] = useState(0)
+
+  useEffect(() => {
+    let mounted = true
+    async function load() {
+      try {
+        const [dRes, cRes] = await Promise.all([
+          fetch("/api/donations", { cache: "no-store" }),
+          fetch("/api/campaigns", { cache: "no-store" }),
+        ])
+        const d = await dRes.json()
+        const c = await cRes.json()
+        if (!mounted) return
+        const donations: Donation[] = d.donations || []
+        const campaigns: Campaign[] = c.campaigns || []
+        setTotalVnd(donations.reduce((sum, it) => sum + (it.amount || 0), 0))
+        setCountDonations(donations.length)
+        setActiveCampaigns(campaigns.filter((x) => x.status === "ACTIVE").length)
+      } catch {}
+    }
+    load()
+    return () => { mounted = false }
+  }, [])
+
+  const stats = useMemo(() => [
+    { label: "Tổng số tiền đã ủng hộ", value: totalVnd.toLocaleString("vi-VN") + "₫" },
+    { label: "Số giao dịch ủng hộ", value: String(countDonations) },
+    { label: "Chiến dịch đang kêu gọi", value: String(activeCampaigns) },
+  ], [totalVnd, countDonations, activeCampaigns])
+
+  const testimonials = [
+    { name: "Chị Hạnh", org: "Quỹ địa phương", text: "Dễ theo dõi từng khoản chi, mạnh thường quân yên tâm hơn hẳn." },
+    { name: "Anh Minh", org: "Đối tác cộng đồng", text: "Thông báo duyệt chi rất kịp thời, xử lý nhanh và minh bạch." },
+    { name: "Bạn Trâm", org: "Tình nguyện viên", text: "Giao diện tiếng Việt dễ dùng, báo cáo tác động rõ ràng." },
+  ]
 
   return (
-    <section id="impact" ref={ref} className="relative py-20 md:py-32 px-4 overflow-hidden">
-      {/* Background Elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-green-500/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
-      </div>
-
-      <div className="relative z-10 max-w-6xl mx-auto">
-        {/* Stats Row */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
+    <section id="impact" className="relative py-20 md:py-32 px-4">
+      <div className="max-w-7xl mx-auto">
+        <motion.h2
+          ref={ref}
+          initial={{ opacity: 0, y: 16 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.8 }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20"
+          transition={{ duration: 0.6 }}
+          className="text-3xl md:text-4xl font-extrabold text-white"
         >
-          {stats.map((stat, index) => (
-            <motion.div
-              key={stat.label}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={inView ? { opacity: 1, scale: 1 } : {}}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-              className="text-center"
-            >
-              <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-cyan-300 to-teal-300 bg-clip-text text-transparent mb-2">
-                {stat.value}
-              </div>
-              <div className="text-gray-300 font-semibold mb-1">{stat.label}</div>
-              <div className="text-gray-500 text-sm">{stat.suffix}</div>
-            </motion.div>
-          ))}
-        </motion.div>
+          Tác động & niềm tin
+        </motion.h2>
 
-        {/* Marquee Section */}
+        {/* Stats */}
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={inView ? { opacity: 1 } : {}}
-          transition={{ duration: 0.8, delay: 0.3 }}
-          className="mb-20"
+          initial={{ opacity: 0, y: 12 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+          className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-5"
         >
-          <h3 className="text-center text-gray-400 text-sm font-semibold mb-8 uppercase tracking-widest">
-            Trusted Partners & Auditors
-          </h3>
-          <Marquee3D />
+          {stats.map((s) => (
+            <div key={s.label} className="rounded-xl border border-white/10 bg-white/5 p-5">
+              <div className="text-2xl md:text-3xl font-bold text-white">{s.value}</div>
+              <div className="text-slate-300 mt-1">{s.label}</div>
+            </div>
+          ))}
         </motion.div>
 
         {/* Testimonials */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.8, delay: 0.5 }}
+          initial={{ opacity: 0, y: 12 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="mt-12"
         >
-          <h3 className="text-2xl md:text-3xl font-bold text-white mb-12 text-center">
-            Voices of <span className="text-teal-300">Impact</span>
-          </h3>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {testimonials.map((testimonial, index) => (
-              <motion.div
-                key={testimonial.name}
-                initial={{ opacity: 0, y: 20 }}
-                animate={inView ? { opacity: 1, y: 0 } : {}}
-                transition={{ duration: 0.6, delay: 0.6 + index * 0.1 }}
-                className="bg-white/5 backdrop-blur-md border border-teal-300/20 rounded-2xl p-6 hover:border-teal-300/40 transition-colors"
-              >
-                <p className="text-gray-300 mb-4 leading-relaxed italic">"{testimonial.text}"</p>
-                <div className="border-t border-teal-300/10 pt-4">
-                  <p className="font-semibold text-white">{testimonial.name}</p>
-                  <p className="text-teal-300 text-sm">{testimonial.org}</p>
+          <Marquee3D/>
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-5">
+            {testimonials.map((t) => (
+              <div key={t.name} className="rounded-xl border border-white/10 bg-white/5 p-5">
+                <p className="text-gray-300 mb-4 leading-relaxed italic">“{t.text}”</p>
+                <div className="border-t border-teal-300/10 pt-3">
+                  <p className="font-semibold text-white">{t.name}</p>
+                  <p className="text-teal-300 text-sm">{t.org}</p>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         </motion.div>

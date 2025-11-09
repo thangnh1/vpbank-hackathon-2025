@@ -1,202 +1,220 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
+import Link from "next/link"
 import { motion } from "framer-motion"
-import { ExternalLink, Download, Eye } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import DashboardLayout from "@/components/dashboard-layout"
+import { Input } from "@/components/ui/input"
 
-interface Donation {
+type DonationStatus = "PLEDGED" | "ESCROWED" | "SETTLED" | "REFUNDED"
+
+type Donation = {
   id: string
-  date: string
-  campaign: string
+  campaignId: string
+  userId: string
   amount: number
-  status: "Pending" | "Verified" | "Released" | "Refunded"
-  txid: string
-  evidence: boolean
-  receipt: boolean
+  status: DonationStatus
+  txId: string
+  paymentMethod: "MOCK_QR" | "BANK_TRANSFER" | "CARD"
+  message?: string
+  createdAt: string
 }
 
-const donations: Donation[] = [
-  {
-    id: "1",
-    date: "2024-11-15",
-    campaign: "Ủng hộ lũ lụt",
-    amount: 500,
-    status: "Verified",
-    txid: "0x2f5e...c3a2",
-    evidence: true,
-    receipt: true,
-  },
-  {
-    id: "2",
-    date: "2024-11-10",
-    campaign: "Ủng hộ trẻ em vùng cao",
-    amount: 1200,
-    status: "Released",
-    txid: "0x8b4f...a7c1",
-    evidence: true,
-    receipt: true,
-  },
-  {
-    id: "3",
-    date: "2024-11-05",
-    campaign: "Ủng hộ Thái Nguyên",
-    amount: 750,
-    status: "Pending",
-    txid: "0x3c9d...f2e5",
-    evidence: false,
-    receipt: false,
-  },
-]
-
-const statusColors = {
-  Pending: "bg-yellow-500/20 text-yellow-300 border-yellow-400/30",
-  Verified: "bg-green-500/20 text-green-300 border-green-400/30",
-  Released: "bg-cyan-500/20 text-cyan-300 border-cyan-400/30",
-  Refunded: "bg-red-500/20 text-red-300 border-red-400/30",
+const STATUS_LABEL: Record<DonationStatus, string> = {
+  PLEDGED: "Đã cam kết",
+  ESCROWED: "Đã ký quỹ",
+  SETTLED: "Đã đối soát",
+  REFUNDED: "Đã hoàn tiền",
 }
 
-export default function DonationsPage() {
-  const [filters, setFilters] = useState({
-    timeRange: "all",
-    campaign: "all",
-    status: "all",
-  })
+const STATUS_CLASS: Record<DonationStatus, string> = {
+  PLEDGED: "bg-slate-500/20 text-slate-300",
+  ESCROWED: "bg-amber-500/20 text-amber-300",
+  SETTLED: "bg-emerald-500/20 text-emerald-300",
+  REFUNDED: "bg-rose-500/20 text-rose-300",
+}
+
+export default function MyDonationsPage() {
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [items, setItems] = useState<Donation[]>([])
+
+  // filters
+  const [q, setQ] = useState("")
+  const [status, setStatus] = useState<"all" | DonationStatus>("all")
+
+  const load = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch("/api/donations?mine=true", { cache: "no-store" })
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}))
+        throw new Error(j.error || "Không tải được dữ liệu ủng hộ")
+      }
+      const j = await res.json()
+      setItems(Array.isArray(j.donations) ? j.donations : [])
+    } catch (e: any) {
+      setError(e.message || "Có lỗi xảy ra")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    load()
+  }, [])
+
+  const filtered = useMemo(() => {
+    const kw = q.trim().toLowerCase()
+    return items
+      .filter((d) => (status === "all" ? true : d.status === status))
+      .filter((d) => {
+        if (!kw) return true
+        return (
+          d.txId.toLowerCase().includes(kw) ||
+          d.campaignId.toLowerCase().includes(kw) ||
+          (d.message || "").toLowerCase().includes(kw)
+        )
+      })
+      .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
+  }, [items, q, status])
+
+  const total = useMemo(() => filtered.reduce((s, d) => s + (d.amount || 0), 0), [filtered])
+
+  const exportCsv = () => {
+    const rows = [
+      ["createdAt", "campaignId", "amount", "status", "txId", "paymentMethod", "message"],
+      ...filtered.map((d) => [
+        new Date(d.createdAt).toLocaleString("vi-VN"),
+        d.campaignId,
+        d.amount,
+        STATUS_LABEL[d.status],
+        d.txId,
+        d.paymentMethod,
+        (d.message || "").replace(/\s+/g, " "),
+      ]),
+    ]
+    const csv = rows.map((r) => r.map((x) => `"${String(x).replace(/"/g, '""')}"`).join(",")).join("\n")
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = "donations.csv"
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(url)
+  }
 
   return (
-    <DashboardLayout>
-      <div className="space-y-8">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <h1 className="text-4xl font-bold text-white mb-2">My Donations</h1>
-          <p className="text-gray-400">Track all your contributions and verify transactions</p>
-        </motion.div>
+    <div className="max-w-6xl">
+      {/* Header */}
+      <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+        <h1 className="text-3xl md:text-4xl font-bold text-white">Ủng hộ của tôi</h1>
+        <p className="text-slate-400 mt-2">
+          Danh sách giao dịch ủng hộ của bạn (khách/đăng nhập đều xem được nhờ định danh ẩn danh).
+        </p>
+      </motion.div>
 
-        {/* Filters */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Toolbar */}
+      <div className="mb-4 flex flex-col md:flex-row gap-3 md:items-center">
+        <div className="flex-1 flex items-center gap-2">
+          <Input
+            placeholder="Tìm theo mã giao dịch, ID chiến dịch, lời nhắn…"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            className="bg-white/5 border-white/10 text-white placeholder:text-slate-400"
+          />
           <select
-            value={filters.timeRange}
-            onChange={(e) => setFilters({ ...filters, timeRange: e.target.value })}
-            className="px-4 py-2 bg-white/5 border border-cyan-300/20 rounded-lg text-white focus:outline-none focus:border-cyan-300/40"
+            value={status}
+            onChange={(e) => setStatus(e.target.value as any)}
+            className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-slate-200"
           >
-            <option value="all" className="bg-slate-900">
-              All Time
-            </option>
-            <option value="month" className="bg-slate-900">
-              This Month
-            </option>
-            <option value="quarter" className="bg-slate-900">
-              This Quarter
-            </option>
-            <option value="year" className="bg-slate-900">
-              This Year
-            </option>
-          </select>
-
-          <select
-            value={filters.campaign}
-            onChange={(e) => setFilters({ ...filters, campaign: e.target.value })}
-            className="px-4 py-2 bg-white/5 border border-cyan-300/20 rounded-lg text-white focus:outline-none focus:border-cyan-300/40"
-          >
-            <option value="all" className="bg-slate-900">
-              All Campaigns
-            </option>
-            <option value="clean-water" className="bg-slate-900">
-              Clean Water
-            </option>
-            <option value="education" className="bg-slate-900">
-              Education
-            </option>
-          </select>
-
-          <select
-            value={filters.status}
-            onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-            className="px-4 py-2 bg-white/5 border border-cyan-300/20 rounded-lg text-white focus:outline-none focus:border-cyan-300/40"
-          >
-            <option value="all" className="bg-slate-900">
-              All Status
-            </option>
-            <option value="pending" className="bg-slate-900">
-              Pending
-            </option>
-            <option value="verified" className="bg-slate-900">
-              Verified
-            </option>
-            <option value="released" className="bg-slate-900">
-              Released
-            </option>
+            <option value="all">Tất cả trạng thái</option>
+            <option value="ESCROWED">Đã ký quỹ</option>
+            <option value="SETTLED">Đã đối soát</option>
+            <option value="REFUNDED">Đã hoàn tiền</option>
+            <option value="PLEDGED">Đã cam kết</option>
           </select>
         </div>
+        <div className="flex gap-2">
+          <Button variant="outline" className="border-white/20 text-white hover:bg-white/10" onClick={exportCsv}>
+            Xuất CSV
+          </Button>
+          <Button variant="secondary" onClick={load}>Làm mới</Button>
+          <Link href="/campaigns">
+            <Button className="bg-gradient-to-r from-cyan-400 to-teal-500 text-slate-950 font-semibold">
+              Ủng hộ thêm
+            </Button>
+          </Link>
+        </div>
+      </div>
 
-        {/* Donations Table */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.1 }}
-          className="bg-white/5 border border-cyan-300/20 rounded-xl overflow-hidden backdrop-blur-md"
-        >
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-cyan-300/10">
-                <th className="px-6 py-4 text-left text-gray-400 font-semibold">Date</th>
-                <th className="px-6 py-4 text-left text-gray-400 font-semibold">Campaign</th>
-                <th className="px-6 py-4 text-left text-gray-400 font-semibold">Amount</th>
-                <th className="px-6 py-4 text-left text-gray-400 font-semibold">Status</th>
-                <th className="px-6 py-4 text-left text-gray-400 font-semibold">TXID</th>
-                <th className="px-6 py-4 text-left text-gray-400 font-semibold">Actions</th>
+      {error && (
+        <div className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 text-red-200 px-4 py-3 text-sm">
+          {error}
+        </div>
+      )}
+
+      {/* Table */}
+      <div className="rounded-2xl border border-white/10 overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-white/5">
+            <tr className="text-left text-slate-300">
+              <th className="px-4 py-3 font-medium">Thời gian</th>
+              <th className="px-4 py-3 font-medium">Chiến dịch</th>
+              <th className="px-4 py-3 font-medium">Số tiền</th>
+              <th className="px-4 py-3 font-medium">Trạng thái</th>
+              <th className="px-4 py-3 font-medium">Mã giao dịch</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-white/10">
+            {loading ? (
+              <tr>
+                <td colSpan={5} className="px-4 py-6 text-slate-300">
+                  Đang tải dữ liệu…
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {donations.map((donation) => (
-                <motion.tr
-                  key={donation.id}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="border-b border-cyan-300/5 hover:bg-white/5 transition-colors"
-                >
-                  <td className="px-6 py-4 text-white">{donation.date}</td>
-                  <td className="px-6 py-4 text-white">{donation.campaign}</td>
-                  <td className="px-6 py-4 text-cyan-300 font-semibold">${donation.amount}</td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ${statusColors[donation.status]}`}
-                    >
-                      {donation.status}
+            ) : filtered.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="px-4 py-6 text-slate-300">
+                  Không có giao dịch nào phù hợp.
+                </td>
+              </tr>
+            ) : (
+              filtered.map((d) => (
+                <tr key={d.id} className="text-slate-200">
+                  <td className="px-4 py-3">{new Date(d.createdAt).toLocaleString("vi-VN")}</td>
+                  <td className="px-4 py-3">
+                    <Link href={`/campaigns/${d.campaignId}`} className="text-cyan-300 hover:underline">
+                      {d.campaignId}
+                    </Link>
+                  </td>
+                  <td className="px-4 py-3 font-semibold">{d.amount.toLocaleString("vi-VN")}₫</td>
+                  <td className="px-4 py-3">
+                    <span className={`px-2 py-1 rounded-full text-xs ${STATUS_CLASS[d.status]}`}>
+                      {STATUS_LABEL[d.status]}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-gray-400 font-mono text-sm">{donation.txid}</td>
-                  <td className="px-6 py-4 flex gap-2">
-                    <button className="p-2 hover:bg-white/10 rounded-lg transition-colors" title="View on explorer">
-                      <ExternalLink size={16} className="text-cyan-300" />
-                    </button>
-                    {donation.evidence && (
-                      <button className="p-2 hover:bg-white/10 rounded-lg transition-colors" title="View evidence">
-                        <Eye size={16} className="text-green-300" />
-                      </button>
-                    )}
-                    {donation.receipt && (
-                      <button className="p-2 hover:bg-white/10 rounded-lg transition-colors" title="Download receipt">
-                        <Download size={16} className="text-teal-300" />
-                      </button>
-                    )}
-                  </td>
-                </motion.tr>
-              ))}
-            </tbody>
-          </table>
-        </motion.div>
-
-        {/* Empty State Message */}
-        {donations.length === 0 && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12">
-            <p className="text-gray-400 mb-4">No donations found with selected filters</p>
-            <Button className="bg-gradient-to-r from-cyan-400 to-teal-500 text-slate-950 font-semibold">
-              Explore Campaigns
-            </Button>
-          </motion.div>
-        )}
+                  <td className="px-4 py-3">{d.txId}</td>
+                </tr>
+              ))
+            )}
+          </tbody>
+          {!loading && filtered.length > 0 && (
+            <tfoot>
+              <tr className="bg-white/5">
+                <td className="px-4 py-3 text-slate-400" colSpan={2}>
+                  Tổng cộng ({filtered.length} giao dịch)
+                </td>
+                <td className="px-4 py-3 font-bold text-white">{total.toLocaleString("vi-VN")}₫</td>
+                <td colSpan={2} />
+              </tr>
+            </tfoot>
+          )}
+        </table>
       </div>
-    </DashboardLayout>
+    </div>
   )
 }

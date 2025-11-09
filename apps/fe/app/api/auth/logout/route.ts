@@ -1,7 +1,8 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { clearSession } from "@/lib/auth"
+import { NextResponse } from "next/server"
 
-export async function POST(request: NextRequest) {
-  await clearSession()
-  return NextResponse.json({ success: true })
+export async function POST() {
+  const res = NextResponse.json({ ok: true })
+  // Xoá session
+  res.cookies.set("session", "", { path: "/", httpOnly: true, maxAge: 0 })
+  return res
 }

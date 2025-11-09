@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
+import { SiteHeader } from "@/components/site-header"
 
 import { Geist, Geist_Mono, Geist as Font_Geist, Geist_Mono as Font_Geist_Mono, Source_Serif_4 as Font_Source_Serif_4 } from 'next/font/google'
 
